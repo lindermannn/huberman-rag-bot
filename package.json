@@ -1,0 +1,18 @@
+{
+  "name": "huberman-bot-db",
+  "version": "1.0.0",
+  "description": "Extractor, translator, and compiler for Huberman Lab transcripts",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.5",
+    "google-translate-api-x": "^10.7.3",
+    "groq-sdk": "^1.3.0",
+    "openai": "^6.45.0"
+  }
+}

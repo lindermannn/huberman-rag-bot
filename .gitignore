@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Secretos — nunca subir
+.env
+
+# Contenido derivado de los transcripts del podcast (copyright) + datasets pesados
+data/raw/
+data/translated/
+data/database/
+data/transcript_chunks.json
+data/huberman-kb-v1.csv
+data/huberman-kb-additions.csv
+Huberman-Lab-Wiki/
+archive.zip
+
+# Artefactos temporales / config de tenant (vive en n8n, no en el repo)
+tenant_huberman_settings_nuevo.json
+data/translated/progress.json
+.claude/

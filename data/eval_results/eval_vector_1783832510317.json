@@ -1,0 +1,655 @@
+{
+  "timestamp": "2026-07-12T05:01:50.306Z",
+  "mode": "vector",
+  "topK": 8,
+  "totalQuestions": 36,
+  "evaluable": 33,
+  "hits": 12,
+  "recallAtK": 0.364,
+  "mrr": 0.284,
+  "avgOfftopicScore": 0.217,
+  "results": [
+    {
+      "id": "gq01",
+      "type": "specific",
+      "question": "¿Cuántas horas antes de dormir debo cortar la cafeína para no afectar el sueño profundo?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.734567382404169,
+      "gotEpisodes": [
+        31,
+        88,
+        102,
+        143,
+        72,
+        19,
+        21,
+        19
+      ]
+    },
+    {
+      "id": "gq02",
+      "type": "specific",
+      "question": "¿Qué efecto tiene la inmersión en agua fría sobre la dopamina?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.55309770038397,
+      "gotEpisodes": [
+        119,
+        66,
+        151,
+        327,
+        355,
+        32,
+        357,
+        347
+      ]
+    },
+    {
+      "id": "gq03",
+      "type": "specific",
+      "question": "¿Cuáles son los seis pilares de la salud hormonal según Huberman?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.6073035141429,
+      "gotEpisodes": [
+        266,
+        264,
+        266,
+        15,
+        15,
+        264,
+        14,
+        232
+      ]
+    },
+    {
+      "id": "gq04",
+      "type": "specific",
+      "question": "¿Cuáles son los tres pilares que sostienen un sueño saludable?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.529287482724776,
+      "gotEpisodes": [
+        108,
+        162,
+        156,
+        207,
+        248,
+        25,
+        338,
+        157
+      ]
+    },
+    {
+      "id": "gq05",
+      "type": "specific",
+      "question": "¿Cómo debo tomar creatina para mejorar fuerza y función cognitiva?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.705027880439732,
+      "gotEpisodes": [
+        145,
+        380,
+        145,
+        121,
+        182,
+        28,
+        121,
+        190
+      ]
+    },
+    {
+      "id": "gq06",
+      "type": "specific",
+      "question": "¿Qué bebidas no rompen un ayuno?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.584853941909952,
+      "gotEpisodes": [
+        28,
+        41,
+        164,
+        360,
+        283,
+        196,
+        283,
+        16
+      ]
+    },
+    {
+      "id": "gq07",
+      "type": "specific",
+      "question": "¿Por qué no debo suprimir el escalofrío después de exponerme al frío?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.598445530929755,
+      "gotEpisodes": [
+        222,
+        123,
+        49,
+        46,
+        314,
+        370,
+        386,
+        57
+      ]
+    },
+    {
+      "id": "gq08",
+      "type": "specific",
+      "question": "¿Cómo se relacionan los medicamentos para el TDAH con los estimulantes callejeros?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.828478514884422,
+      "gotEpisodes": [
+        313,
+        313,
+        138,
+        138,
+        313,
+        138,
+        37,
+        138
+      ]
+    },
+    {
+      "id": "gq09",
+      "type": "specific",
+      "question": "¿Qué protocolo de respiración recomienda para llegar a un estado neutro o equilibrado?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.501279034760742,
+      "gotEpisodes": [
+        10,
+        275,
+        262
+      ]
+    },
+    {
+      "id": "gq10",
+      "type": "specific",
+      "question": "¿Qué es la hormesis y qué intervenciones la aprovechan?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.686167590901107,
+      "gotEpisodes": [
+        70,
+        357,
+        70,
+        70,
+        52,
+        52,
+        119,
+        270
+      ]
+    },
+    {
+      "id": "gq11",
+      "type": "specific",
+      "question": "¿Cuál es la cantidad de alcohol más saludable según la evidencia?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.632952416219063,
+      "gotEpisodes": [
+        86,
+        360,
+        86,
+        126,
+        86,
+        360,
+        86,
+        86
+      ]
+    },
+    {
+      "id": "gq12",
+      "type": "specific",
+      "question": "¿Cuánto cardio en zona 2 se recomienda antes de un trabajo cognitivo exigente?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.633326700999366,
+      "gotEpisodes": [
+        73,
+        361,
+        355,
+        73,
+        293,
+        252,
+        37,
+        314
+      ]
+    },
+    {
+      "id": "gq13",
+      "type": "specific",
+      "question": "¿Qué dosis de mioinositol mejora la profundidad del sueño?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.803722185825037,
+      "gotEpisodes": [
+        80,
+        103,
+        80,
+        84,
+        103,
+        108,
+        103,
+        80
+      ]
+    },
+    {
+      "id": "gq14",
+      "type": "specific",
+      "question": "¿Qué combinación de suplementos apoya la dopamina y el enfoque?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.728706679590938,
+      "gotEpisodes": [
+        88,
+        88,
+        90,
+        108,
+        102,
+        88,
+        90,
+        128
+      ]
+    },
+    {
+      "id": "gq15",
+      "type": "specific",
+      "question": "¿Cada cuánto debo tomar cafeína para evitar que mi cuerpo desarrolle tolerancia?",
+      "hit": true,
+      "rank": 3,
+      "topScore": 0.679080103528955,
+      "gotEpisodes": [
+        19,
+        31,
+        102,
+        72,
+        19,
+        88,
+        143,
+        21
+      ]
+    },
+    {
+      "id": "gq16",
+      "type": "specific",
+      "question": "¿Qué es el 'Corte de Huberman' de cafeína?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.587168602650567,
+      "gotEpisodes": [
+        31,
+        271,
+        31,
+        125,
+        102,
+        130,
+        12,
+        102
+      ]
+    },
+    {
+      "id": "gq17",
+      "type": "specific",
+      "question": "¿Qué tienen en común el anhelo social y el anhelo de comida a nivel cerebral?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.666617177744809,
+      "gotEpisodes": [
+        51,
+        215,
+        16,
+        36,
+        51,
+        268,
+        16,
+        268
+      ]
+    },
+    {
+      "id": "gq18",
+      "type": "specific",
+      "question": "¿Arginina más ejercicio aumenta más la hormona de crecimiento que hacer solo uno de los dos?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.725345159984674,
+      "gotEpisodes": [
+        17,
+        108,
+        270,
+        17,
+        195,
+        104,
+        108,
+        113
+      ]
+    },
+    {
+      "id": "gq19",
+      "type": "specific",
+      "question": "¿La experiencia por sí sola cambia el cerebro adulto?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.775875420539815,
+      "gotEpisodes": [
+        6,
+        238,
+        135,
+        6,
+        58,
+        316,
+        58,
+        137
+      ]
+    },
+    {
+      "id": "gq20",
+      "type": "specific",
+      "question": "¿El Adderall activa el mismo sistema de enfoque que la atención natural?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.695498375521673,
+      "gotEpisodes": [
+        138,
+        88,
+        138,
+        138,
+        395,
+        138,
+        353,
+        88
+      ]
+    },
+    {
+      "id": "gq21",
+      "type": "specific",
+      "question": "¿Cuándo se debe hacer la exposición a luz solar de la mañana para la creatividad y el enfoque?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.711415811933419,
+      "gotEpisodes": [
+        319,
+        43,
+        190,
+        314,
+        198,
+        359,
+        319,
+        359
+      ]
+    },
+    {
+      "id": "gq22",
+      "type": "specific",
+      "question": "¿Qué determina el punto más importante para cambiar el reloj circadiano según la temperatura corporal?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.514586839645098,
+      "gotEpisodes": [
+        206,
+        69,
+        297,
+        66,
+        66,
+        69,
+        297,
+        40
+      ]
+    },
+    {
+      "id": "gq23",
+      "type": "specific",
+      "question": "¿Una ducha caliente antes de dormir ayuda a conciliar el sueño?",
+      "hit": true,
+      "rank": 3,
+      "topScore": 0.684477772349952,
+      "gotEpisodes": [
+        40,
+        198,
+        4,
+        40,
+        40,
+        315,
+        84,
+        66
+      ]
+    },
+    {
+      "id": "gq24",
+      "type": "specific",
+      "question": "¿Qué rol juega la corteza prefrontal en la vía de recompensa y la impulsividad?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.635520829158795,
+      "gotEpisodes": [
+        260,
+        36,
+        49,
+        105,
+        353,
+        165,
+        91,
+        39
+      ]
+    },
+    {
+      "id": "gq25",
+      "type": "specific",
+      "question": "¿Por qué las recompensas intermitentes son tan efectivas para mantener la motivación?",
+      "hit": true,
+      "rank": 2,
+      "topScore": 0.793156809631657,
+      "gotEpisodes": [
+        39,
+        12,
+        260,
+        260,
+        12,
+        39,
+        12,
+        128
+      ]
+    },
+    {
+      "id": "gq26",
+      "type": "specific",
+      "question": "¿La vasopresina qué comportamientos gobierna?",
+      "hit": true,
+      "rank": 1,
+      "topScore": 0.63074487454401,
+      "gotEpisodes": [
+        13,
+        13,
+        262,
+        59,
+        89,
+        176,
+        176,
+        251
+      ]
+    },
+    {
+      "id": "gq27",
+      "type": "specific",
+      "question": "¿El hielo es efectivo para tratar lesiones musculares?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.70504751836602,
+      "gotEpisodes": [
+        245,
+        370,
+        119,
+        45,
+        79,
+        23,
+        94,
+        119
+      ]
+    },
+    {
+      "id": "gq28",
+      "type": "specific",
+      "question": "¿Cómo sabe el cuerpo cuándo ha comido suficiente proteína y grasas?",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.389350835392591,
+      "gotEpisodes": [
+        416,
+        339,
+        113,
+        285,
+        253,
+        219,
+        76,
+        111
+      ]
+    },
+    {
+      "id": "gq29",
+      "type": "vague",
+      "question": "cómo duermo mejor",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.414027260300017,
+      "gotEpisodes": [
+        79,
+        188,
+        219,
+        203,
+        203,
+        203,
+        245,
+        203
+      ]
+    },
+    {
+      "id": "gq30",
+      "type": "vague",
+      "question": "rutina de ejercicio",
+      "hit": null,
+      "rank": null,
+      "topScore": 0.623277456799586,
+      "gotEpisodes": [
+        204,
+        380,
+        117,
+        380,
+        380,
+        106,
+        355,
+        370
+      ]
+    },
+    {
+      "id": "gq31",
+      "type": "vague",
+      "question": "quiero enfocarme mejor en el trabajo",
+      "hit": true,
+      "rank": 5,
+      "topScore": 0.454613717110825,
+      "gotEpisodes": [
+        332,
+        156,
+        389,
+        192,
+        80,
+        296,
+        314,
+        115
+      ]
+    },
+    {
+      "id": "gq32",
+      "type": "vague",
+      "question": "tips para el estrés",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.633985125001512,
+      "gotEpisodes": [
+        35,
+        199,
+        323,
+        323,
+        88,
+        129,
+        272,
+        199
+      ]
+    },
+    {
+      "id": "gq33",
+      "type": "vague",
+      "question": "qué suplementos me recomiendas",
+      "hit": false,
+      "rank": null,
+      "topScore": 0.569392472178782,
+      "gotEpisodes": [
+        334,
+        216,
+        108,
+        23,
+        352,
+        109,
+        280,
+        282
+      ]
+    },
+    {
+      "id": "gq34",
+      "type": "offtopic",
+      "question": "dame los planes y precios disponibles",
+      "hit": null,
+      "rank": null,
+      "topScore": 0.293641773383112,
+      "gotEpisodes": [
+        161,
+        152,
+        294,
+        152,
+        130,
+        67,
+        346,
+        281
+      ]
+    },
+    {
+      "id": "gq35",
+      "type": "offtopic",
+      "question": "cuál es la capital de Francia",
+      "hit": null,
+      "rank": null,
+      "topScore": 0.125555364480355,
+      "gotEpisodes": [
+        120,
+        120,
+        120,
+        344,
+        116,
+        116,
+        267,
+        251
+      ]
+    },
+    {
+      "id": "gq36",
+      "type": "offtopic",
+      "question": "ayúdame a escribir un correo de renuncia",
+      "hit": null,
+      "rank": null,
+      "topScore": 0.232203969612876,
+      "gotEpisodes": [
+        47,
+        292,
+        292,
+        300,
+        110,
+        196,
+        103
+      ]
+    }
+  ]
+}
