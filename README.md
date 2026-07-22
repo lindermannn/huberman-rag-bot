@@ -35,7 +35,7 @@ mensaje del usuario
                                                     de YouTube al minuto exacto)
 ```
 
-Nodo `module-rag-v3` en n8n (rama `supabase`, aislada por tenant — no afecta a otros tenants de la misma infraestructura compartida).
+Desde 2026-07-21 corre en un **workflow único y autocontenido** (ver Caso de estudio 4) — sin agente con tool-calling, sin dependencia de ninguna infraestructura multi-tenant compartida. El retrieval es incondicional y determinístico: no hay una decisión de "¿llamo al RAG o no?" de la que un LLM se pueda saltear.
 
 ## Por qué hybrid + rewriting + rerank, y no solo vector search
 
@@ -79,11 +79,37 @@ Lección: una decisión de performance correcta a una escala ("no necesito este 
 - **Upgrade del modelo del agente** de `gpt-4.1-mini` a `gpt-4.1` (configurable por tenant, cambio de un solo campo): mejora medida en obediencia de instrucciones — mini inventaba URLs en la sección de fuentes; 4.1 respeta la regla "solo links que vengan de la recuperación".
 - **Formato de respuesta iterado con feedback de usuario real:** el cuerpo va limpio (sin citas inline) y las fuentes se ofrecen bajo demanda — decisión de producto tras observar que el modelo omitía citas inconsistentemente cuando había muchos episodios juntos.
 
+## Caso de estudio 3: regresión silenciosa de hybrid search, encontrada leyendo infraestructura real (2026-07-21)
+
+Al proponer una optimización de búsqueda vectorial, la documentación interna decía "hybrid search en producción" — pero leer el nodo real de recuperación reveló que la función activa (`match_kb_published_documents_v2`) era **similitud coseno pura**. La función hybrid (RRF vector + full-text) seguía existiendo en la base pero había dejado de usarse en algún punto no documentado, como efecto secundario de una migración de plataforma que unificó el retrieval de todos los tenants bajo una función genérica del "Centro de Conocimiento" compartido — sin que nadie tomara la decisión explícita de sacrificar el hybrid para este bot.
+
+Bonus al investigar: la función vieja tenía un bug propio no detectado — hardcodeaba `episode_number`/`timestamp_start` a `null` en vez de leerlos de la tabla, así que ni siquiera reactivarla tal cual hubiera arreglado las citas con deep-link.
+
+**Fix:** función RPC nueva y aditiva (`match_kb_published_documents_hybrid_v1`, [`sql/fase5_hybrid_v1_and_standalone.sql`](sql/fase5_hybrid_v1_and_standalone.sql)) — no modifica la función en producción, mismo modelo de seguridad, usa el índice GIN existente sobre `content_tsv`, y de paso corrige el bug de los campos en `null`. El branch por función se resuelve en la capa de aplicación (config por tenant con allowlist explícito — nunca se interpola un string sin validar en la URL del RPC), default = comportamiento actual para cualquier tenant sin config, cero riesgo para el resto de la plataforma. Verificado con un caso real documentado (`¿qué dosis de teanina se recomienda?`): el chunk correcto tenía similitud vectorial ~0 y solo aparecía vía el componente full-text — confirmando que el hybrid search no es una mejora teórica, es la diferencia entre encontrar la respuesta o no.
+
+**Efecto colateral encontrado y corregido:** con hybrid, un chunk top-ranked por RRF puede tener similitud vectorial 0 (si llegó solo por texto). El cálculo de confianza original tomaba el score del primer resultado post-rerank — con hybrid eso podía leer 0 y disparar falsos negativos. Fix: usar el máximo de similitud entre los chunks realmente citados, no el del primero.
+
+Lección: la documentación describe una intención pasada; el estado real de un sistema en producción solo se confirma leyéndolo.
+
+## Caso de estudio 4: de tool-calling agéntico a pipeline determinístico — eliminar la clase de bug, no parchearla (2026-07-21)
+
+La limitación de citas fabricadas (Fase 4, arriba) tenía un diseño de arreglo pendiente: persistir el resultado del RAG y releerlo por un identificador de ejecución exacto (`turnId`), para que el nodo final pudiera construir las citas en código sin depender de si el agente decidió invocar la herramienta o no. Al empezar a implementarlo apareció un hallazgo que cambió el plan: el despachador de módulos — compartido por **todos** los tenants y **todos** los módulos de la plataforma (no solo RAG) — descarta silenciosamente cualquier campo no whitelisteado en tránsito. Ni siquiera un identificador de sesión llegaba hoy al pipeline de RAG. Implementar el mecanismo de correlación exacto requería tocar ese despachador compartido — blast radius alto para blindar un bot de un solo tenant.
+
+**Decisión:** en vez de aumentar la sofisticación de la arquitectura compartida, reducir el acoplamiento del bot con ella. Extracción completa a un workflow único y autocontenido: mismo trigger de Telegram, misma capa de dedup, pero el pipeline de recuperación y composición corre inline, sin pasar por el router ni el motor de agente compartidos. El cambio de diseño más importante: **el retrieval dejó de ser una decisión de un agente con tool-calling y pasó a ser un paso incondicional del pipeline.** Sin una herramienta que un LLM pueda decidir no invocar, la clase de bug completa (citas fabricadas cuando el agente saltea el RAG) deja de ser posible — no hace falta ningún mecanismo de correlación cross-ejecución para blindarla.
+
+Además, ya con cero dependencias de la plataforma compartida, se sumaron mejoras de producto que antes hubieran significado tocar infraestructura común: memoria de conversación propia con expiración (6h de inactividad reinicia el contexto), detección de saludos/chit-chat para no gastar una llamada de RAG completa en un "Hola", y las citas con deep-link vuelven a ofrecerse bajo demanda — pero ahora con un *fast path* que responde con los links de la última respuesta sin volver a correr el pipeline completo.
+
+**Dos bugs reales de la migración, detectados en producción antes/después de publicar (no en desarrollo):**
+- Un nodo que puede devolver legítimamente cero resultados (usuario sin historial previo) cortaba en silencio toda la cadena downstream — n8n no ejecuta nodos aguas abajo de un resultado vacío salvo que se declare explícitamente lo contrario.
+- Reasignar un parámetro que ya existía en un nodo (en vez de crear uno nuevo) usando una ruta de tipo JSON Pointer falló silenciosamente dos veces — creó una ruta anidada nueva en vez de sobrescribir la real, dejando la expresión vieja activa. La API reportaba éxito y cada ejecución real mostraba `status: success`; el bot respondía igual un mensaje de error genérico a cada usuario. Solo fue visible comparando la salida calculada por el pipeline contra lo que el nodo de envío realmente mandó — la lección operativa: "la ejecución no lanzó error" no es lo mismo que "el resultado es el esperado".
+
+Lección: cuando blindar una arquitectura compartida contra un caso límite requiere tocar más infraestructura común de la que el caso límite justifica, la opción correcta puede ser reducir el acoplamiento en vez de aumentar la sofisticación del blindaje.
+
 ## Limitaciones conocidas / roadmap
 
-- **Riesgo de citas fabricadas cuando el agente saltea la herramienta RAG:** verificado empíricamente que el nodo final del agente no puede leer la salida de la herramienta (viaja por el canal `ai_tool` interno, no por `main`), así que las citas no se pueden construir determinísticamente sin re-arquitectura (persist-and-read con gate de recencia, evaluado y pospuesto). Mitigado a nivel de producto: la respuesta no lista episodios; los ofrece bajo demanda.
 - **34/413 episodios fuera del índice de transcript** (formato de caption por línea distinto al de marcadores de capítulo) — pendiente extender el parser.
 - **Cross-encoder reranker** dedicado en vez de LLM-rerank genérico, y benchmark más amplio que las 36 preguntas doradas.
+- **Slot allocation por tipo de chunk** (resumen de episodio vs. segmento de transcript con timestamp): hoy compiten sin distinción por los mismos puestos del top-K; garantizar representación mínima de cada tipo podría mejorar la especificidad de las respuestas — identificado, no implementado.
 
 ## Stack
 
