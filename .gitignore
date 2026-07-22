@@ -18,3 +18,9 @@ archive.zip
 tenant_huberman_settings_nuevo.json
 data/translated/progress.json
 .claude/
+
+# Reels generados y estado en vivo del bot (se regeneran localmente, no son fuente)
+data/clips_aprobados/
+data/memoria_clips.json
+data/candidatos_pendientes.json
+scripts/__pycache__/
