@@ -1,11 +1,11 @@
 // Evalua el RAG de tenant_huberman contra el set de preguntas doradas (data/golden_questions.json).
 // Corre 100% local. Mide Hit@K, Recall@K y MRR comparando episode_number esperado vs el que devuelve Supabase.
 //
-// Uso (PowerShell):
-//   $env:OPENAI_API_KEY = "sk-..."
-//   $env:SUPABASE_SERVICE_ROLE_KEY = "sb_secret_..."
-//   node src/eval_rag.js            (vector puro, funcion match_kb_documents)
-//   $env:RAG_MODE = "hybrid"; node src/eval_rag.js   (BM25 + vector, funcion match_kb_documents_hybrid)
+// Uso (Node 20+ carga el .env solo, no hace falta exportar nada):
+//   node --env-file=.env src/eval_rag.js                         -> modo production (por defecto)
+//   $env:RAG_MODE="vector"; node --env-file=.env src/eval_rag.js -> baseline Fase 1
+//
+// El .env necesita OPENAI_API_KEY y SUPABASE_SERVICE_ROLE_KEY.
 //
 // Guarda el resultado con timestamp y modo en data/eval_results/ para comparar antes/despues de cada fase.
 
@@ -13,12 +13,26 @@ const fs = require('fs');
 const path = require('path');
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const MODE = (process.env.RAG_MODE || 'vector').toLowerCase();
-const SUPABASE_RPC_URL = MODE === 'hybrid'
-  ? 'https://lmyqexbucniromvnudjo.supabase.co/rest/v1/rpc/match_kb_documents_hybrid'
-  : 'https://lmyqexbucniromvnudjo.supabase.co/rest/v1/rpc/match_kb_documents';
+// Acepta los nombres que se usaron historicamente en este repo.
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+  || process.env.supabase_api_key
+  || process.env.SUPABASE_API_KEY;
+const MODE = (process.env.RAG_MODE || 'production').toLowerCase();
+
+// Modos:
+//   production -> match_kb_published_documents_hybrid_v1  (LA QUE USA EL BOT HOY)
+//   hybrid     -> match_kb_documents_hybrid   (legacy Fase 2; OJO: devuelve episode_number NULL,
+//                                              por eso reporta 0% desde la migracion de Fase 3)
+//   vector     -> match_kb_documents          (baseline Fase 1)
+const RPC_BY_MODE = {
+  production: 'match_kb_published_documents_hybrid_v1',
+  hybrid: 'match_kb_documents_hybrid',
+  vector: 'match_kb_documents'
+};
+const RPC_NAME = RPC_BY_MODE[MODE] || RPC_BY_MODE.production;
+const SUPABASE_RPC_URL = `https://lmyqexbucniromvnudjo.supabase.co/rest/v1/rpc/${RPC_NAME}`;
 const TENANT_ID = 'tenant_huberman';
+const BRAND_ID = 'e4a937d9-81d6-49de-b0ec-95cfa7d7d245'; // marca principal de tenant_huberman
 const TOP_K = 8;
 
 if (!OPENAI_KEY) { console.error('Falta OPENAI_API_KEY.'); process.exit(1); }
@@ -40,6 +54,12 @@ async function embed(text) {
 async function queryKb(embedding, queryText) {
   const payload = { query_embedding: embedding, match_tenant_id: TENANT_ID, match_count: TOP_K };
   if (MODE === 'hybrid') payload.query_text = queryText;
+  if (MODE === 'production') {
+    // La funcion de produccion exige brand_id y acepta el texto para la mitad full-text del RRF.
+    payload.query_text = queryText;
+    payload.match_brand_id = BRAND_ID;
+    payload.rrf_k = 50;
+  }
   const res = await fetch(SUPABASE_RPC_URL, {
     method: 'POST',
     headers: {

@@ -18,3 +18,8 @@ archive.zip
 tenant_huberman_settings_nuevo.json
 data/translated/progress.json
 .claude/
+
+# Variantes de .env que crea Windows/Notepad (contienen claves reales)
+.env.txt
+.env.*
+!.env.example

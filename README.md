@@ -53,7 +53,20 @@ Metodología: set de 36 "preguntas doradas" ([`data/golden_questions.json`](data
 |---|---|---|---|
 | Vector puro (baseline, KB de resúmenes) | 33.3% (11/33) | 0.259 | 0.208 |
 | Hybrid + rewriting + rerank | 36.4% (12/33) | 0.269 | 0.208 |
-| Hybrid + chunks de transcript (Fase 3, ~27K filas) | 36.4% (12/33) | **0.289** | 0.217 |
+| Hybrid + chunks de transcript (Fase 3, ~27K filas) | 36.4% (12/33) | 0.289 | 0.217 |
+| **Función de producción actual (Fase 5)** | **57.6% (19/33)** | **0.425** | 0.274 |
+
+Las tres primeras filas se midieron contra `match_kb_documents_hybrid`; la última contra `match_kb_published_documents_hybrid_v1`, la que sirve al bot hoy. Cambió la función **y** el estado de la KB, así que el salto 36.4% → 57.6% es el efecto acumulado de tres cambios (chunking por timestamp, migración a la función v1, limpieza de contaminación publicitaria), no de uno solo. El MRR es la señal más fuerte: **12 de los 19 aciertos salen en el puesto 1**, o sea que cuando el sistema encuentra el episodio correcto ahora lo rankea primero.
+
+Las 5 preguntas vagas fallan las 5 en esta medición, pero el harness evalúa **recuperación pura**, sin el query rewriting que sí corre en producción — así que 57.6% es un piso, no el rendimiento del bot completo.
+
+### Resultado negativo: la limpieza de publicidad no movió estas métricas
+
+Al desactivar 46 fragmentos publicitarios (caso de estudio 5) se corrió la evaluación con y sin ellos: **los 36 conjuntos recuperados resultaron idénticos**, con el mismo Recall@8 y el mismo MRR. Efecto nulo, verificado comparando los resultados fila por fila — no estimado.
+
+Eso no invalida la limpieza: expone un límite de la métrica. Recall@8 responde *"¿está el episodio esperado entre los 8 primeros?"*, no *"¿cuántos de esos 8 puestos sirven de algo?"*. Un caso real de producción devolvió **6 de 6 fragmentos publicitarios** para "suplementos para entrenar fuerza" — context precision de 0%, Recall@8 sin registrar nada. El golden set tampoco cubre ese patrón: sus preguntas de suplementos son específicas (creatina, mioinositol) y la publicidad solo compite en consultas genéricas.
+
+Conclusión metodológica: **medir recall no alcanza para detectar contaminación del contexto.**
 
 Mejora real pero modesta — reportada sin inflar. El score de las preguntas de control se mantuvo estable (bajo), confirmando que el sistema no empezó a alucinar contenido para preguntas fuera de dominio al mejorar el recall. La Fase 3 no movió el Recall@8 (los chunks finos no agregan episodios nuevos al top-8), pero mejoró el MRR de forma consistente en ambos modos: cuando el sistema encuentra el episodio correcto, ahora lo rankea mejor porque existe una unidad de contenido específica en vez de solo el resumen del episodio completo. Ejemplo real: "¿qué es la L-teanina?" pasó de "no encontré información" (gap de granularidad documentado abajo) a una cita precisa del episodio correcto con timestamp.
 
@@ -105,8 +118,24 @@ Además, ya con cero dependencias de la plataforma compartida, se sumaron mejora
 
 Lección: cuando blindar una arquitectura compartida contra un caso límite requiere tocar más infraestructura común de la que el caso límite justifica, la opción correcta puede ser reducir el acoplamiento en vez de aumentar la sofisticación del blindaje.
 
+## Caso de estudio 5: contaminación por publicidad, y por qué el recall no la ve (2026-08-04)
+
+Una pregunta real de un usuario — *"suplementos para entrenar fuerza"* — devolvió **seis fragmentos y los seis eran lecturas de patrocinio** del podcast ("nos hemos asociado con Momentous… envíos internacionales…"). Cero contenido sobre creatina o proteína. Causa: el anuncio se repite en cientos de episodios y satura las palabras genéricas que la gente más busca ("suplementos", "sueño", "enfoque"), ganándole al contenido sustantivo, que menciona el compuesto específico en vez del término genérico.
+
+Lo relevante fue el proceso, porque **las dos primeras reglas de detección fallaron y solo se supo por validarlas contra datos reales antes de aplicarlas**:
+
+1. **Por palabras clave** — marcaba 245 fragmentos. Contrastada contra los 6 culpables reales, solo atrapaba 1: el propio anuncio dice *"protocolo de suplementación optimizado"*, y esa palabra lo hacía pasar por contenido legítimo.
+2. **Por texto repetido entre episodios** — conceptualmente mejor (la publicidad es copy-paste, el contenido es único), pero los candidatos incluían bloques de ~3.000 caracteres que arrancan con la intro y **terminan explicando neuronas y neurotransmisores**. Aplicarla habría destruido contenido real.
+3. **Por longitud** — el discriminador confiable: los fragmentos cortos son publicidad pura, los largos siempre son mixtos.
+
+Resultado: 46 fragmentos desactivados (0.17% de la KB), todos segmentos de transcripción de <2.000 caracteres. Al aplicar aparecieron **4 falsos positivos** que hubo que restaurar — entre ellos `hub-ep108-proto21`, el protocolo *"Marco Racional para la Toma de Decisiones sobre Suplementación"*, que es justamente el mejor fragmento de la base para responder sobre suplementos: había caído porque el protocolo usa las mismas frases que el anuncio. La regla se había validado contra los culpables (¿los atrapa?) pero no contra los **tipos de contenido** (¿a quién más golpea?).
+
+El desenlace más útil está en la sección de evaluación: **medido, el efecto sobre Recall@8 y MRR fue exactamente cero**, lo que expuso que la métrica es ciega a este tipo de degradación.
+
 ## Limitaciones conocidas / roadmap
 
+- **Faltan métricas de relevancia del contexto y groundedness.** El harness mide posición en el ranking (Recall@8, MRR), no utilidad de lo recuperado ni fundamentación de la respuesta. El caso de la publicidad lo demostró empíricamente: contaminación del 100% en un caso real, invisible para las métricas actuales. Próxima extensión del evaluador.
+- **El golden set no cubre consultas genéricas** del tipo que hacen los usuarios reales ("suplementos para entrenar fuerza", "qué tomar para dormir") — justo el patrón donde la contaminación se manifiesta.
 - **34/413 episodios fuera del índice de transcript** (formato de caption por línea distinto al de marcadores de capítulo) — pendiente extender el parser.
 - **Cross-encoder reranker** dedicado en vez de LLM-rerank genérico, y benchmark más amplio que las 36 preguntas doradas.
 - **Slot allocation por tipo de chunk** (resumen de episodio vs. segmento de transcript con timestamp): hoy compiten sin distinción por los mismos puestos del top-K; garantizar representación mínima de cada tipo podría mejorar la especificidad de las respuestas — identificado, no implementado.
