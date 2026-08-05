@@ -60,6 +60,8 @@ Las tres primeras filas se midieron contra `match_kb_documents_hybrid`; la últi
 
 Las 5 preguntas vagas fallan las 5 en esta medición, pero el harness evalúa **recuperación pura**, sin el query rewriting que sí corre en producción — así que 57.6% es un piso, no el rendimiento del bot completo.
 
+Sobre las tres primeras filas: mejora real pero modesta, reportada sin inflar. El score de las preguntas de control se mantuvo estable y bajo, confirmando que el sistema no empezó a alucinar para preguntas fuera de dominio al subir el recall. La Fase 3 no movió el Recall@8 (los chunks finos no agregan episodios nuevos al top-8) pero sí el MRR: cuando el sistema encuentra el episodio correcto lo rankea mejor, porque existe una unidad de contenido específica en vez de solo el resumen del episodio completo. Ejemplo real: "¿qué es la L-teanina?" pasó de "no encontré información" (gap de granularidad documentado abajo) a una cita precisa con timestamp.
+
 ### Resultado negativo: la limpieza de publicidad no movió estas métricas
 
 Al desactivar 46 fragmentos publicitarios (caso de estudio 5) se corrió la evaluación con y sin ellos: **los 36 conjuntos recuperados resultaron idénticos**, con el mismo Recall@8 y el mismo MRR. Efecto nulo, verificado comparando los resultados fila por fila — no estimado.
@@ -68,7 +70,23 @@ Eso no invalida la limpieza: expone un límite de la métrica. Recall@8 responde
 
 Conclusión metodológica: **medir recall no alcanza para detectar contaminación del contexto.**
 
-Mejora real pero modesta — reportada sin inflar. El score de las preguntas de control se mantuvo estable (bajo), confirmando que el sistema no empezó a alucinar contenido para preguntas fuera de dominio al mejorar el recall. La Fase 3 no movió el Recall@8 (los chunks finos no agregan episodios nuevos al top-8), pero mejoró el MRR de forma consistente en ambos modos: cuando el sistema encuentra el episodio correcto, ahora lo rankea mejor porque existe una unidad de contenido específica en vez de solo el resumen del episodio completo. Ejemplo real: "¿qué es la L-teanina?" pasó de "no encontré información" (gap de granularidad documentado abajo) a una cita precisa del episodio correcto con timestamp.
+### Verificación end-to-end: la misma consulta, antes y después
+
+La comprobación que el golden set no podía dar se hizo repitiendo en producción la consulta real que destapó el problema. Dos ejecuciones del mismo workflow, misma pregunta, separadas por la limpieza:
+
+| | Antes (`8688`) | Después (`8707`) |
+|---|---|---|
+| Fuentes publicitarias | **6 de 6** | **0 de 6** |
+| Datos verificables en el contexto recuperado | ninguno | todos |
+| Confianza reportada | 0.55 | 0.67 |
+
+Antes, el contexto no contenía una sola mención a creatina: el modelo respondió **desde su conocimiento pretrained** y el código le adjuntó seis citas a anuncios que no respaldaban nada. Las citas eran reales —links válidos, timestamps correctos— pero no sostenían el texto. Un fallo de *groundedness* que ninguna métrica de recall detecta y que, a simple vista, se ve como una respuesta excelente.
+
+Después, cada dato de la respuesta se rastrea a un fragmento citado: "3 a 5 gramos diarios" (Ep 121, Andy Galpin), "~5 g/día para ~82 kg" y "más de 66 estudios, 12-20% de potencia" (Ep 280), "beta-alanina 60-240 segundos, dosis 2-5 g" (Ep 22), "evitar megadosis de vitamina C" (Ep 306). Aparecieron además las voces que correspondían —Layne Norton, Andy Galpin, Darren Candow— que la base tenía desde el principio, tapadas por seis lecturas de patrocinio.
+
+**Las dos mitades del hallazgo no se contradicen:** efecto cero en el golden set, y de 100% a 0% de contaminación en una consulta real. El golden set no contiene consultas genéricas, que es exactamente donde la publicidad competía. La limpieza sirvió justo donde el instrumento no miraba.
+
+Nota sobre groundedness: en la ejecución posterior, el modelo se apoyó en el contexto sin cambiar una línea del prompt. La instrucción *"usa exclusivamente la información de la base"* ya estaba bien escrita — lo que fallaba era que no había información que usar. Eso no elimina la necesidad de medir groundedness (esta verificación se hizo cotejando frase por frase a mano, y eso no escala), pero descarta que el problema estuviera en el prompt.
 
 ## Caso de estudio: bug en producción (2026-07-11)
 
